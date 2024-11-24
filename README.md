@@ -10,4 +10,5 @@ curl --location --request POST 'http://localhost:8080/api/files/upload' \
 DOWNLOAD:(YOU WILL GET THIS CURL IN RESPONSE AS WELL)
 curl --location --request GET 'http://localhost:8080/api/files/download/ad4ae623-b0ca-436c-9254-5b8ec423f6e1?passcode='
 
-NOTE: /target folder uploaded where executable jar file is availiable
+NOTE: /target folder uploaded where executable jar file is availiable.
+In code I kept database related code as comment to show development even it was not required.
