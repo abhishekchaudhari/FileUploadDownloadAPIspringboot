@@ -19,7 +19,7 @@ public class FileController {
                                              @RequestParam("passcode") String passcode) {
         try {
             String id = fileService.uploadFile(file.getBytes(), passcode, file.getOriginalFilename());
-            return ResponseEntity.ok("http://localhost:8080/api/files/download/" + id);
+            return ResponseEntity.ok("http://localhost:8080/api/files/download/" + id +"?passcode=");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }

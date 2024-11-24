@@ -1,27 +1,27 @@
 package com.alzion.alzion.service;
 
-import com.alzion.alzion.model.FileMetadata;
-import com.alzion.alzion.repository.FileMetadataRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
+import java.nio.file.*;
+import java.time.*;
+import java.util.stream.Stream;
 
 @Service
 public class FileService {
     @Value("${storage.path}")
     private String storagePath;
 
-    private final FileMetadataRepository repository;
+//    private final FileMetadataRepository repository;
     private final EncryptionService encryptionService;
 
-    public FileService(FileMetadataRepository repository, EncryptionService encryptionService) {
-        this.repository = repository;
+    public FileService(EncryptionService encryptionService) {
+//        this.repository = repository;
         this.encryptionService = encryptionService;
     }
 
@@ -34,35 +34,53 @@ public class FileService {
             fos.write(encryptedData);
         }
 
-        FileMetadata metadata = new FileMetadata();
-        metadata.setId(id);
-        metadata.setFileName(fileName);
-        metadata.setFilePath(filePath);
-        metadata.setUploadTime(LocalDateTime.now());
+        //Code is added just to show DB connectivity part and is of no use
+//        FileMetadata metadata = new FileMetadata();
+//        metadata.setId(id);
+//        metadata.setFileName(fileName);
+//        metadata.setFilePath(filePath);
+//        metadata.setUploadTime(LocalDateTime.now());
+//        repository.save(metadata);
 
-        repository.save(metadata);
         return id;
     }
 
     public byte[] downloadFile(String id, String passcode) throws Exception {
-        Optional<FileMetadata> metadataOpt = repository.findById(id);
-        if (metadataOpt.isEmpty()) {
+        String filePath = storagePath + "/" + id; // Construct the file path from the storage directory and file name
+
+        // Check if the file exists
+        File file = new File(filePath);
+        if (!file.exists()) {
             throw new Exception("File not found");
         }
 
-        FileMetadata metadata = metadataOpt.get();
-        byte[] encryptedData = Files.readAllBytes(new File(metadata.getFilePath()).toPath());
+        // Read the file contents
+        byte[] encryptedData = Files.readAllBytes(file.toPath());
         return encryptionService.decrypt(encryptedData, passcode);
     }
 
     public void deleteExpiredFiles() {
-        LocalDateTime threshold = LocalDateTime.now().minusHours(48);
-        repository.findAllByUploadTimeBefore(threshold).forEach(metadata -> {
-            File file = new File(metadata.getFilePath());
-            if (file.exists()) {
-                file.delete();
-            }
-            repository.delete(metadata);
-        });
+        LocalDateTime threshold = LocalDateTime.now().minusMinutes(1);
+
+        try (Stream<Path> files = Files.list(Paths.get(storagePath))) {
+            files.forEach(filePath -> {
+                try {
+                    // Get file's creation time
+                    BasicFileAttributes attributes = Files.readAttributes(filePath, BasicFileAttributes.class);
+                    LocalDateTime creationTime = LocalDateTime.ofInstant(attributes.creationTime().toInstant(), ZoneId.systemDefault());
+
+                    // Check if the file is older than the threshold
+                    if (creationTime.isBefore(threshold)) {
+                        // Delete the file
+                        Files.delete(filePath);
+                        System.out.println("Deleted expired file: " + filePath.getFileName());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to process file: " + filePath + ", Error: " + e.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            System.err.println("Error listing files in directory: " + storagePath + ", Error: " + e.getMessage());
+        }
     }
 }

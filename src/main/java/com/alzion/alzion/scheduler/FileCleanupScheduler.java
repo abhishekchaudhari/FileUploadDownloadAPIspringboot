@@ -12,7 +12,8 @@ public class FileCleanupScheduler {
         this.fileService = fileService;
     }
 
-    @Scheduled(cron = "0 * * * * *") // Runs every hour
+//    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 0 * * * *")
     public void cleanUpOldFiles() {
         fileService.deleteExpiredFiles();
     }
