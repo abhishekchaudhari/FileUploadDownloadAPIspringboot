@@ -34,7 +34,7 @@ public class FileService {
             fos.write(encryptedData);
         }
 
-        //Code is added just to show DB connectivity part and is of no use
+        // Code is added just to show DB connectivity part and is of no use
 //        FileMetadata metadata = new FileMetadata();
 //        metadata.setId(id);
 //        metadata.setFileName(fileName);
@@ -60,7 +60,11 @@ public class FileService {
     }
 
     public void deleteExpiredFiles() {
-        LocalDateTime threshold = LocalDateTime.now().minusMinutes(1);
+        // For local Testing purpose
+//        LocalDateTime threshold = LocalDateTime.now().minusMinutes(1);
+
+
+        LocalDateTime threshold = LocalDateTime.now().minusHours(48);
 
         try (Stream<Path> files = Files.list(Paths.get(storagePath))) {
             files.forEach(filePath -> {

@@ -12,9 +12,12 @@ public class FileCleanupScheduler {
         this.fileService = fileService;
     }
 
-//    @Scheduled(cron = "0 0 * * * *")
+    //For local testing purpose
+//    @Scheduled(cron = "*/20 * * * * *")
+
     @Scheduled(cron = "0 0 * * * *")
     public void cleanUpOldFiles() {
+
         fileService.deleteExpiredFiles();
     }
 }
